@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Typing Test</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⌨️</text></svg>">
+<style>
+:root {
+    --bg: #0a0a14;
+    --surface: #16162a;
+    --accent: #ff6b35;
+    --accent-light: #ff8c42;
+    --accent-dark: #d94f1a;
+    --accent-glow: rgba(255, 107, 53, 0.15);
+    --accent-subtle: rgba(255, 107, 53, 0.06);
+    --text: #f0ece4;
+    --text-dim: #8a8a9a;
+    --text-muted: #5a5a6e;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    --mono: "SF Mono", "Fira Code", "Cascadia Code", ui-monospace, monospace;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+h1 {
+    text-transform: uppercase;
+    letter-spacing: 0.35em;
+    font-weight: 200;
+    opacity: 0.5;
+    font-size: 1.1rem;
+    margin-bottom: 4px;
+}
+.tagline {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    margin-bottom: 20px;
+}
+#app {
+    width: 100%;
+    max-width: 720px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+#stats {
+    display: flex;
+    gap: 24px;
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    flex-wrap: wrap;
+    justify-content: center;
+}
+.stat { text-align: center; }
+.stat-val { color: var(--accent); font-size: 1.2rem; font-weight: 600; }
+.stat-lbl { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--text-muted); }
+#quote-display {
+    width: 100%;
+    background: var(--surface);
+    border-radius: var(--radius-md);
+    padding: 20px 24px;
+    font-size: 1.2rem;
+    line-height: 1.7;
+    font-family: var(--font);
+    min-height: 80px;
+    word-break: break-word;
+}
+#quote-display .correct { color: #4caf50; }
+#quote-display .incorrect { color: #e53935; text-decoration: underline; }
+#quote-display .cursor {
+    background: var(--accent);
+    color: var(--bg);
+    animation: blink 0.8s infinite;
+}
+#quote-display .pending { color: var(--text-muted); }
+@keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+}
+#input-area {
+    width: 100%;
+    position: relative;
+}
+textarea {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--accent-subtle);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 1rem;
+    padding: 14px 18px;
+    border-radius: var(--radius-md);
+    resize: none;
+    outline: none;
+    height: 60px;
+    transition: border-color 0.2s;
+}
+textarea:focus { border-color: var(--accent); }
+textarea::placeholder { color: var(--text-muted); }
+textarea:disabled { opacity: 0.5; }
+#done-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+button {
+    background: var(--surface);
+    border: 1px solid var(--accent-subtle);
+    color: var(--text);
+    padding: 8px 24px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-family: var(--font);
+    transition: all 0.2s;
+}
+button:hover {
+    background: var(--accent-glow);
+    border-color: var(--accent);
+}
+#results {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(10, 10, 20, 0.92);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+}
+#results.show { display: flex; }
+#results-box {
+    background: var(--surface);
+    border: 1px solid var(--accent-subtle);
+    border-radius: var(--radius-lg);
+    padding: 40px;
+    text-align: center;
+    max-width: 380px;
+    width: 90%;
+}
+#results-box h2 {
+    font-weight: 200;
+    letter-spacing: 0.2em;
+    margin-bottom: 20px;
+    color: var(--accent);
+}
+#results-box .r { display: flex; justify-content: space-between; padding: 6px 0; font-size: 0.9rem; }
+#results-box .r .v { font-family: var(--mono); color: var(--accent); }
+#results-box .r .l { color: var(--text-dim); }
+#results-box button { margin-top: 20px; }
+footer {
+    margin-top: 24px;
+    font-size: 0.65rem;
+    color: var(--text-muted);
+}
+footer a { color: var(--text-muted); text-decoration: none; }
+footer a:hover { color: var(--accent); }
+</style>
+</head>
+<body>
+<div id="app">
+<h1>Typing Test</h1>
+<div class="tagline">Type the quote below as fast and accurately as you can</div>
+<div id="stats">
+<div class="stat"><div class="stat-val" id="wpm">0</div><div class="stat-lbl">WPM</div></div>
+<div class="stat"><div class="stat-val" id="accuracy">100%</div><div class="stat-lbl">Accuracy</div></div>
+<div class="stat"><div class="stat-val" id="timer">0:00</div><div class="stat-lbl">Time</div></div>
+</div>
+<div id="quote-display"></div>
+<div id="input-area">
+<textarea id="textarea" placeholder="Start typing here..." disabled></textarea>
+</div>
+<div id="done-actions">
+<button id="new-test-btn">New Test</button>
+</div>
+<footer>
+<a href="https://github.com/soumendrak">soumendrak</a> — licensed under MIT
+</footer>
+</div>
+<div id="results">
+<div id="results-box">
+<h2>Test Complete!</h2>
+<div class="r"><span class="l">WPM</span><span class="v" id="r-wpm">0</span></div>
+<div class="r"><span class="l">Accuracy</span><span class="v" id="r-acc">0%</span></div>
+<div class="r"><span class="l">Time</span><span class="v" id="r-time">0:00</span></div>
+<div class="r"><span class="l">Mistakes</span><span class="v" id="r-mistakes">0</span></div>
+<button id="results-new-btn">New Test</button>
+</div>
+</div>
+
+<script>
+const quotes = [
+    "The quick brown fox jumps over the lazy dog.",
+    "A journey of a thousand miles begins with a single step.",
+    "To be or not to be, that is the question.",
+    "All that glitters is not gold.",
+    "The only thing we have to fear is fear itself.",
+    "In the middle of difficulty lies opportunity.",
+    "Life is what happens when you are busy making other plans.",
+    "The purpose of life is not to be happy but to be useful.",
+    "Get your facts first, then you can distort them as you please.",
+    "I have not failed, I have just found ten thousand ways that do not work.",
+    "The best way to predict the future is to create it.",
+    "If you tell the truth you do not have to remember anything.",
+    "Knowledge is power.",
+    "Time is money.",
+    "The pen is mightier than the sword.",
+    "Actions speak louder than words.",
+    "Fortune favors the bold.",
+    "Practice makes perfect.",
+    "Where there is a will, there is a way.",
+    "A picture is worth a thousand words.",
+    "Better late than never.",
+    "The early bird catches the worm.",
+    "Every cloud has a silver lining.",
+    "Haste makes waste.",
+    "When in Rome, do as the Romans do.",
+    "Brevity is the soul of wit.",
+    "To thine own self be true.",
+    "All the world is a stage and all the men and women merely players.",
+    "What is past is prologue.",
+    "The fault is not in our stars but in ourselves.",
+    "A rose by any other name would smell as sweet.",
+    "Parting is such sweet sorrow.",
+    "Hell is empty and all the devils are here.",
+    "The course of true love never did run smooth.",
+    "If music be the food of love, play on.",
+    "Better three hours too soon than a minute too late.",
+    "One touch of nature makes the whole world kin.",
+    "The darkest hour is just before the dawn.",
+    "Smooth seas do not make skillful sailors.",
+    "The only way to do great work is to love what you do.",
+    "Stay hungry, stay foolish.",
+    "Innovation distinguishes between a leader and a follower.",
+    "Your time is limited, do not waste it living someone else's life.",
+    "Design is not just what it looks like and feels like, design is how it works.",
+    "There is no substitute for hard work.",
+    "Success is not final, failure is not fatal, it is the courage to continue that counts.",
+    "Believe you can and you are halfway there.",
+    "The future belongs to those who believe in the beauty of their dreams.",
+    "In three words I can sum up everything I have learned about life: it goes on.",
+    "Do not dwell in the past, do not dream of the future, concentrate the mind on the present moment."
+];
+
+const quoteDisplay = document.getElementById('quote-display');
+const textarea = document.getElementById('textarea');
+const wpmEl = document.getElementById('wpm');
+const accuracyEl = document.getElementById('accuracy');
+const timerEl = document.getElementById('timer');
+const results = document.getElementById('results');
+const rWpm = document.getElementById('r-wpm');
+const rAcc = document.getElementById('r-acc');
+const rTime = document.getElementById('r-time');
+const rMistakes = document.getElementById('r-mistakes');
+
+let currentQuote = '';
+let timerInterval = null;
+let startTime = null;
+let elapsed = 0;
+let running = false;
+let finished = false;
+let correctChars = 0;
+let incorrectChars = 0;
+let totalTyped = 0;
+
+function getRandomQuote() {
+    return quotes[Math.floor(Math.random() * quotes.length)];
+}
+
+// Safe: only hardcoded quotes are rendered, no user input in HTML context
+function escapeHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function charHtml(ch) {
+    if (ch === ' ') return '&nbsp;';
+    return escapeHtml(ch);
+}
+function renderQuote(cursorPos) {
+    let html = '';
+    const typed = textarea.value;
+    if (cursorPos === undefined) cursorPos = typed.length;
+    for (let i = 0; i < currentQuote.length; i++) {
+        let cls = 'pending';
+        let ch = currentQuote[i];
+        if (i < typed.length) {
+            if (typed[i] === currentQuote[i]) {
+                cls = 'correct';
+            } else {
+                cls = 'incorrect';
+            }
+        }
+        if (i === cursorPos && i <= typed.length) {
+            html += `<span class="${cls} cursor">${charHtml(ch)}</span>`;
+        } else {
+            html += `<span class="${cls}">${charHtml(ch)}</span>`;
+        }
+    }
+    if (cursorPos >= currentQuote.length) {
+        html += `<span class="cursor" style="background:var(--accent);color:var(--bg);">&nbsp;</span>`;
+    }
+    quoteDisplay.innerHTML = html;
+}
+
+function startTest() {
+    currentQuote = getRandomQuote();
+    textarea.value = '';
+    textarea.disabled = false;
+    textarea.focus();
+    running = false;
+    finished = false;
+    startTime = null;
+    elapsed = 0;
+    correctChars = 0;
+    incorrectChars = 0;
+    totalTyped = 0;
+    wpmEl.textContent = '0';
+    accuracyEl.textContent = '100%';
+    timerEl.textContent = '0:00';
+    results.classList.remove('show');
+    renderQuote(0);
+}
+
+function updateStats() {
+    const typed = textarea.value;
+    let correct = 0, incorrect = 0;
+    for (let i = 0; i < typed.length && i < currentQuote.length; i++) {
+        if (typed[i] === currentQuote[i]) correct++;
+        else incorrect++;
+    }
+    correctChars = correct;
+    incorrectChars = incorrect;
+    totalTyped = typed.length;
+    const acc = totalTyped > 0 ? Math.round((correct / totalTyped) * 100) : 100;
+    accuracyEl.textContent = acc + '%';
+
+    if (elapsed > 0) {
+        const wpm = Math.round((correct / 5) / (elapsed / 60));
+        wpmEl.textContent = wpm;
+    }
+}
+
+function finishTest() {
+    finished = true;
+    running = false;
+    clearInterval(timerInterval);
+    textarea.disabled = true;
+    const acc = totalTyped > 0 ? Math.round((correctChars / totalTyped) * 100) : 100;
+    const wpm = elapsed > 0 ? Math.round((correctChars / 5) / (elapsed / 60)) : 0;
+    const mins = Math.floor(elapsed / 60);
+    const secs = Math.floor(elapsed % 60);
+    rWpm.textContent = wpm;
+    rAcc.textContent = acc + '%';
+    rTime.textContent = mins + ':' + String(secs).padStart(2, '0');
+    rMistakes.textContent = incorrectChars;
+    setTimeout(() => results.classList.add('show'), 300);
+}
+
+textarea.addEventListener('input', () => {
+    if (finished) return;
+    if (!running && textarea.value.length > 0) {
+        running = true;
+        startTime = Date.now();
+        timerInterval = setInterval(() => {
+            elapsed = (Date.now() - startTime) / 1000;
+            const mins = Math.floor(elapsed / 60);
+            const secs = Math.floor(elapsed % 60);
+            timerEl.textContent = mins + ':' + String(secs).padStart(2, '0');
+            updateStats();
+        }, 100);
+    }
+    const typed = textarea.value;
+    // Prevent going past quote
+    if (typed.length > currentQuote.length) {
+        textarea.value = typed.slice(0, currentQuote.length);
+    }
+    renderQuote();
+    updateStats();
+
+    if (textarea.value.length >= currentQuote.length) {
+        // check if all correct
+        let allCorrect = true;
+        for (let i = 0; i < currentQuote.length; i++) {
+            if (textarea.value[i] !== currentQuote[i]) { allCorrect = false; break; }
+        }
+        if (allCorrect) finishTest();
+    }
+});
+
+document.getElementById('new-test-btn').addEventListener('click', startTest);
+document.getElementById('results-new-btn').addEventListener('click', startTest);
+
+startTest();
+</script>
+</body>
+</html>
