@@ -46,8 +46,26 @@ h1 {
 .tagline {
     color: var(--text-muted);
     font-size: 0.75rem;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
 }
+#lang-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 12px;
+}
+.lang-tab {
+    padding: 4px 14px;
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    border: 1px solid var(--accent-subtle);
+    color: var(--text-dim);
+    font-size: 0.75rem;
+    cursor: pointer;
+    font-family: var(--font);
+    transition: all 0.2s;
+}
+.lang-tab:hover { border-color: var(--accent); color: var(--text); }
+.lang-tab.active { background: var(--accent-glow); border-color: var(--accent); color: var(--accent); }
 #app {
     width: 100%;
     max-width: 720px;
@@ -176,6 +194,11 @@ footer a:hover { color: var(--accent); }
 <div id="app">
 <h1>Typing Test</h1>
 <div class="tagline">Type the quote below as fast and accurately as you can</div>
+<div id="lang-tabs">
+<div class="lang-tab active" data-lang="en" onclick="switchLang('en')">English</div>
+<div class="lang-tab" data-lang="or" onclick="switchLang('or')">ଓଡ଼ିଆ</div>
+<div class="lang-tab" data-lang="hi" onclick="switchLang('hi')">हिन्दी</div>
+</div>
 <div id="stats">
 <div class="stat"><div class="stat-val" id="wpm">0</div><div class="stat-lbl">WPM</div></div>
 <div class="stat"><div class="stat-val" id="accuracy">100%</div><div class="stat-lbl">Accuracy</div></div>
@@ -204,58 +227,146 @@ footer a:hover { color: var(--accent); }
 </div>
 
 <script>
-const quotes = [
-    "The quick brown fox jumps over the lazy dog.",
-    "A journey of a thousand miles begins with a single step.",
-    "To be or not to be, that is the question.",
-    "All that glitters is not gold.",
-    "The only thing we have to fear is fear itself.",
-    "In the middle of difficulty lies opportunity.",
-    "Life is what happens when you are busy making other plans.",
-    "The purpose of life is not to be happy but to be useful.",
-    "Get your facts first, then you can distort them as you please.",
-    "I have not failed, I have just found ten thousand ways that do not work.",
-    "The best way to predict the future is to create it.",
-    "If you tell the truth you do not have to remember anything.",
-    "Knowledge is power.",
-    "Time is money.",
-    "The pen is mightier than the sword.",
-    "Actions speak louder than words.",
-    "Fortune favors the bold.",
-    "Practice makes perfect.",
-    "Where there is a will, there is a way.",
-    "A picture is worth a thousand words.",
-    "Better late than never.",
-    "The early bird catches the worm.",
-    "Every cloud has a silver lining.",
-    "Haste makes waste.",
-    "When in Rome, do as the Romans do.",
-    "Brevity is the soul of wit.",
-    "To thine own self be true.",
-    "All the world is a stage and all the men and women merely players.",
-    "What is past is prologue.",
-    "The fault is not in our stars but in ourselves.",
-    "A rose by any other name would smell as sweet.",
-    "Parting is such sweet sorrow.",
-    "Hell is empty and all the devils are here.",
-    "The course of true love never did run smooth.",
-    "If music be the food of love, play on.",
-    "Better three hours too soon than a minute too late.",
-    "One touch of nature makes the whole world kin.",
-    "The darkest hour is just before the dawn.",
-    "Smooth seas do not make skillful sailors.",
-    "The only way to do great work is to love what you do.",
-    "Stay hungry, stay foolish.",
-    "Innovation distinguishes between a leader and a follower.",
-    "Your time is limited, do not waste it living someone else's life.",
-    "Design is not just what it looks like and feels like, design is how it works.",
-    "There is no substitute for hard work.",
-    "Success is not final, failure is not fatal, it is the courage to continue that counts.",
-    "Believe you can and you are halfway there.",
-    "The future belongs to those who believe in the beauty of their dreams.",
-    "In three words I can sum up everything I have learned about life: it goes on.",
-    "Do not dwell in the past, do not dream of the future, concentrate the mind on the present moment."
-];
+const wordLists = {
+    en: [
+        "The quick brown fox jumps over the lazy dog.",
+        "A journey of a thousand miles begins with a single step.",
+        "To be or not to be, that is the question.",
+        "All that glitters is not gold.",
+        "The only thing we have to fear is fear itself.",
+        "In the middle of difficulty lies opportunity.",
+        "Life is what happens when you are busy making other plans.",
+        "The purpose of life is not to be happy but to be useful.",
+        "Get your facts first, then you can distort them as you please.",
+        "I have not failed, I have just found ten thousand ways that do not work.",
+        "The best way to predict the future is to create it.",
+        "If you tell the truth you do not have to remember anything.",
+        "Knowledge is power.",
+        "Time is money.",
+        "The pen is mightier than the sword.",
+        "Actions speak louder than words.",
+        "Fortune favors the bold.",
+        "Practice makes perfect.",
+        "Where there is a will, there is a way.",
+        "A picture is worth a thousand words.",
+        "Better late than never.",
+        "The early bird catches the worm.",
+        "Every cloud has a silver lining.",
+        "Haste makes waste.",
+        "When in Rome, do as the Romans do.",
+        "Brevity is the soul of wit.",
+        "To thine own self be true.",
+        "All the world is a stage and all the men and women merely players.",
+        "What is past is prologue.",
+        "The fault is not in our stars but in ourselves.",
+        "A rose by any other name would smell as sweet.",
+        "Parting is such sweet sorrow.",
+        "Hell is empty and all the devils are here.",
+        "The course of true love never did run smooth.",
+        "If music be the food of love, play on.",
+        "Better three hours too soon than a minute too late.",
+        "One touch of nature makes the whole world kin.",
+        "The darkest hour is just before the dawn.",
+        "Smooth seas do not make skillful sailors.",
+        "The only way to do great work is to love what you do.",
+        "Stay hungry, stay foolish.",
+        "Innovation distinguishes between a leader and a follower.",
+        "Your time is limited, do not waste it living someone else's life.",
+        "Design is not just what it looks like and feels like, design is how it works.",
+        "There is no substitute for hard work.",
+        "Success is not final, failure is not fatal, it is the courage to continue that counts.",
+        "Believe you can and you are halfway there.",
+        "The future belongs to those who believe in the beauty of their dreams.",
+        "In three words I can sum up everything I have learned about life: it goes on.",
+        "Do not dwell in the past, do not dream of the future, concentrate the mind on the present moment."
+    ],
+    or: [
+        "ସମୟ କାହାରିକୁ ଅପେକ୍ଷା କରେ ନାହିଁ।",
+        "ପରିଶ୍ରମ ହିଁ ସଫଳତାର ଚାବିକାଠି।",
+        "ସତ୍ୟମ ଏବ ସତ୍ୟମ, ନାନ୍ୟଃ ପନ୍ଥା ବିଦ୍ୟତେ।",
+        "ଅତି ଲୋଭ ତାହାର ସର୍ବନାଶ।",
+        "ଧୈର୍ଯ୍ୟ ଏକ ଔଷଧ, ଯାହା ସବୁ ରୋଗକୁ ଭଲ କରେ।",
+        "ଜ୍ଞାନ ହିଁ ଶକ୍ତି।",
+        "ଶିକ୍ଷା ହିଁ ଜୀବନର ଆଲୋକ।",
+        "ଏକତା ହିଁ ବଳ।",
+        "ଆଶା ହିଁ ଜୀବନର ମୂଳମନ୍ତ୍ର।",
+        "ସମୟ ନଦୀ ପରି ବହିଯାଏ, ଫେରିଆସେ ନାହିଁ।",
+        "କଠୋର ପରିଶ୍ରମ ବିନା ସଫଳତା କେବେ ମିଳେ ନାହିଁ।",
+        "ସତ କଥା କହିଲେ କିଛି ମନେ ରଖିବାକୁ ପଡେ ନାହିଁ।",
+        "ନିୟମିତ ଅଭ୍ୟାସ ମଣିଷକୁ ସିଦ୍ଧ କରେ।",
+        "ଭଲ କାମ କଲେ ଭଲ ଫଳ ମିଳେ।",
+        "ମାତୃଭୂମି ସବୁଠାରୁ ବଡ଼।",
+        "ଧନ ଅସ୍ଥାୟୀ, ଗୁଣ ଚିରସ୍ଥାୟୀ।",
+        "ମନୁଷ୍ୟ ମହାନ ତାର କାର୍ଯ୍ୟରେ।",
+        "ସମୟ ହିଁ ସର୍ବଶ୍ରେଷ୍ଠ ଶିକ୍ଷକ।",
+        "ସହନଶୀଳତା ହେଉଛି ସଫଳତାର ମୂଳଦୁଆ।",
+        "ସଂଘର୍ଷ ହିଁ ସଫଳତାକୁ ସୁଖଦ କରେ।",
+        "ବିଦ୍ୟା ହିଁ ମଣିଷର ପ୍ରକୃତ ଅଳଙ୍କାର।",
+        "ସରଳ ଜୀବନ, ଉଚ୍ଚ ଚିନ୍ତା।",
+        "ପରୋପକାର ହିଁ ମନୁଷ୍ୟର ପରମ ଧର୍ମ।",
+        "କ୍ଷମା ହେଉଛି ସବୁଠାରୁ ବଡ଼ ବଳ।",
+        "ସତ୍ୟର ବିଜୟ ସର୍ବଦା ହୋଇଥାଏ।",
+        "ପ୍ରକୃତି ହିଁ ଈଶ୍ୱରଙ୍କର ସୃଷ୍ଟି।",
+        "ଜୀବନ ସୁନ୍ଦର, ଯଦି ଦେଖିବାକୁ ଜାଣ।",
+        "ପୁସ୍ତକ ହିଁ ମଣିଷର ଶ୍ରେଷ୍ଠ ବନ୍ଧୁ।",
+        "ଅହଂକାର ପତନର କାରଣ।",
+        "ସମାଜ ହିଁ ମଣିଷର ପରିଚୟ।",
+        "ପ୍ରତ୍ୟେକ ଦିନ ଏକ ନୂଆ ଆରମ୍ଭ।",
+        "ସୁଖ ହେଉଛି ମନର ଶାନ୍ତି।",
+        "ସ୍ୱପ୍ନ ଦେଖିବା ହିଁ ଜୀବନର ମୂଳମନ୍ତ୍ର।",
+        "ଛୋଟ ଛୋଟ କାମ ବଡ଼ ପରିବର୍ତ୍ତନ ଆଣେ।",
+        "ନିଜ ଉପରେ ବିଶ୍ୱାସ ହିଁ ସଫଳତାର ଚାବିକାଠି।",
+        "ହସ ହେଉଛି ସବୁଠାରୁ ଶ୍ରେଷ୍ଠ ଔଷଧ।",
+        "ମୌନ ହିଁ ବଳ।",
+        "ପରିଶ୍ରମ କେବେ ବ୍ୟର୍ଥ ଯାଏ ନାହିଁ।",
+        "ଆତ୍ମବିଶ୍ୱାସ ହିଁ ବଡ଼ ବଳ।",
+        "ପ୍ରତ୍ୟେକ ସମସ୍ୟାର ଏକ ସମାଧାନ ଅଛି।"
+    ],
+    hi: [
+        "कठोर परिश्रम ही सफलता की कुंजी है।",
+        "सत्यमेव जयते, नानृतम्।",
+        "समय किसी की प्रतीक्षा नहीं करता।",
+        "ज्ञान ही शक्ति है।",
+        "शिक्षा ही जीवन का प्रकाश है।",
+        "एकता में ही बल है।",
+        "आशा ही जीवन का मूलमंत्र है।",
+        "समय नदी की तरह बहता है, लौटकर नहीं आता।",
+        "सच बोलने से कुछ याद रखने की जरूरत नहीं।",
+        "नियमित अभ्यास मनुष्य को सिद्ध करता है।",
+        "अच्छा काम करने से अच्छा फल मिलता है।",
+        "मातृभूमि सबसे बड़ी है।",
+        "धन अस्थायी है, गुण स्थायी।",
+        "मनुष्य अपने कर्मों से महान है।",
+        "समय सबसे अच्छा शिक्षक है।",
+        "सहनशीलता सफलता की नींव है।",
+        "संघर्ष ही सफलता को सुखद बनाता है।",
+        "विद्या ही मनुष्य का असली आभूषण है।",
+        "सरल जीवन, उच्च विचार।",
+        "परोपकार ही मनुष्य का परम धर्म है।",
+        "क्षमा सबसे बड़ा बल है।",
+        "सत्य की हमेशा जीत होती है।",
+        "प्रकृति ईश्वर की सबसे सुंदर रचना है।",
+        "जीवन सुंदर है, यदि देखना जानो।",
+        "पुस्तक मनुष्य की सबसे अच्छी मित्र है।",
+        "अहंकार पतन का कारण है।",
+        "समाज ही मनुष्य की पहचान है।",
+        "हर दिन एक नई शुरुआत है।",
+        "सुख मन की शांति है।",
+        "सपने देखना जीवन का मूलमंत्र है।",
+        "छोटे-छोटे काम बड़ा बदलाव लाते हैं।",
+        "खुद पर विश्वास ही सफलता की कुंजी है।",
+        "हँसी सबसे अच्छी दवा है।",
+        "मौन भी एक शक्ति है।",
+        "परिश्रम कभी व्यर्थ नहीं जाता।",
+        "आत्मविश्वास सबसे बड़ा बल है।",
+        "हर समस्या का एक समाधान होता है।",
+        "धैर्य एक फल है जो मीठा होता है।",
+        "सादा जीवन उच्च विचार।",
+        "विद्या का दान सबसे बड़ा दान है।"
+    ]
+};
+
+let currentLang = 'en';
 
 const quoteDisplay = document.getElementById('quote-display');
 const textarea = document.getElementById('textarea');
@@ -278,11 +389,17 @@ let correctChars = 0;
 let incorrectChars = 0;
 let totalTyped = 0;
 
-function getRandomQuote() {
-    return quotes[Math.floor(Math.random() * quotes.length)];
+function switchLang(lang) {
+    currentLang = lang;
+    document.querySelectorAll('.lang-tab').forEach(t => t.classList.toggle('active', t.dataset.lang === lang));
+    startTest();
 }
 
-// Safe: only hardcoded quotes are rendered, no user input in HTML context
+function getRandomQuote() {
+    const list = wordLists[currentLang] || wordLists.en;
+    return list[Math.floor(Math.random() * list.length)];
+}
+
 function escapeHtml(s) {
     return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
@@ -384,7 +501,6 @@ textarea.addEventListener('input', () => {
         }, 100);
     }
     const typed = textarea.value;
-    // Prevent going past quote
     if (typed.length > currentQuote.length) {
         textarea.value = typed.slice(0, currentQuote.length);
     }
@@ -392,7 +508,6 @@ textarea.addEventListener('input', () => {
     updateStats();
 
     if (textarea.value.length >= currentQuote.length) {
-        // check if all correct
         let allCorrect = true;
         for (let i = 0; i < currentQuote.length; i++) {
             if (textarea.value[i] !== currentQuote[i]) { allCorrect = false; break; }
